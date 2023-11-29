@@ -8,7 +8,7 @@ const port = 3000;
 // Multer configuration
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, './uploads/'); // Set your desired destination for storing files
+    cb(null, './uploads/'); 
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname);
@@ -17,10 +17,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB in bytes
+  limits: { fileSize: 100 * 1024 * 1024 }, 
 });
 
-// Serve a simple HTML form for testing
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
