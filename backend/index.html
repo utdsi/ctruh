@@ -113,8 +113,8 @@ function uploadFile() {
         // Show loader
         const loaderContainer = document.getElementById('loaderContainer');
         loaderContainer.style.display = 'flex';
-
-        const chunkSize = 1024 * 1024; // 1 MB chunks (adjust as needed)
+        // 1 MB chunks (adjust as needed)
+        const chunkSize = 1024 * 1024; 
         const totalChunks = Math.ceil(file.size / chunkSize);
         let currentChunk = 0;
 
@@ -147,17 +147,19 @@ function uploadFile() {
             } else {
               // All chunks uploaded
               alert('File uploaded successfully!');
-              loaderContainer.style.display = 'none'; // Hide loader
+              // Hide loader
+              loaderContainer.style.display = 'none'; 
             }
           })
           .catch(error => {
             console.error('Error uploading file:', error);
             alert('Error uploading file');
-            loaderContainer.style.display = 'none'; // Hide loader on error
+            // Hide loader on error
+            loaderContainer.style.display = 'none'; 
           });
         }
-
-        uploadChunk(); // Start the upload process
+        // Start the upload process
+        uploadChunk(); 
       } else {
         alert('Please select a file before uploading.');
       }
