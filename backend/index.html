@@ -89,55 +89,79 @@ button:hover {
 </head>
 <body>
 
-  <div class="loader-container" id="loaderContainer">
-    <div class="loader"></div>
-  </div>
-
-  <div class="container">
-    <h1>File Upload</h1>
-
-    <form id="uploadForm" enctype="multipart/form-data">
-      <input type="file" name="file" id="fileInput" />
-      <button type="button" onclick="uploadFile()">Upload</button>
-    </form>
-  </div>
+    <div class="loader-container" id="loaderContainer">
+        <div class="loader"></div>
+      </div>
+    
+      <div class="container">
+        <h1>Chunked File Upload</h1>
+    
+        <form id="uploadForm" enctype="multipart/form-data" method="post" action="">
+          <input type="file" name="file" id="fileInput" />
+          <button type="button" onclick="uploadFile()">Upload</button>
+        </form>
+      </div>
 
   
    
    <script>
-  function uploadFile() {
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
+function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
 
-    if (file) {
-      // Show loader
-      const loaderContainer = document.getElementById('loaderContainer');
-      loaderContainer.style.display = 'flex';
+      if (file) {
+        // Show loader
+        const loaderContainer = document.getElementById('loaderContainer');
+        loaderContainer.style.display = 'flex';
 
-      const formData = new FormData();
-      formData.append('file', file);
+        const chunkSize = 1024 * 1024; // 1 MB chunks (adjust as needed)
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        let currentChunk = 0;
 
-      fetch('/upload', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.text())
-      .catch(error => {
-        console.error('Error uploading file:', error);
-        alert('Error uploading file');
-      })
-      .finally(() => {
-        // Hide loader regardless of success or error
-        loaderContainer.style.display = 'none';
-      })
-      .then(message => {
-        // Display alert after hiding the loader
-        alert(message);
-      });
-    } else {
-      alert('Please select a file before uploading.');
+        function uploadChunk() {
+          const start = currentChunk * chunkSize;
+          const end = Math.min(start + chunkSize, file.size);
+          const chunk = file.slice(start, end);
+
+          const formData = new FormData();
+          formData.append('file', chunk);
+          formData.append('totalChunks', totalChunks);
+          formData.append('currentChunk', currentChunk + 1);
+
+          fetch('/upload', {
+            method: 'POST',
+            body: formData,
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.text();
+          })
+          .then(message => {
+            console.log(message);
+            currentChunk++;
+
+            if (currentChunk < totalChunks) {
+              uploadChunk(); // Upload next chunk
+            } else {
+              // All chunks uploaded
+              alert('File uploaded successfully!');
+              loaderContainer.style.display = 'none'; // Hide loader
+            }
+          })
+          .catch(error => {
+            console.error('Error uploading file:', error);
+            alert('Error uploading file');
+            loaderContainer.style.display = 'none'; // Hide loader on error
+          });
+        }
+
+        uploadChunk(); // Start the upload process
+      } else {
+        alert('Please select a file before uploading.');
+      }
     }
-  }
 </script>
 
 

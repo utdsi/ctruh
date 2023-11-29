@@ -6,8 +6,19 @@ const app = express();
 const port = 3000;
 
 // Multer configuration
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads/'); // Set your desired destination for storing files
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB in bytes
+});
 
 // Serve a simple HTML form for testing
 app.get('/', (req, res) => {
@@ -17,22 +28,19 @@ app.get('/', (req, res) => {
 // Handle file upload using chunks
 app.post('/upload', upload.single('file'), (req, res) => {
   const file = req.file;
-  const buffer = file.buffer;
-
-  // Change the destination path as needed
   const filePath = __dirname + '/uploads/' + file.originalname;
 
-  // Use fs.createWriteStream to write the file in chunks
-  const stream = fs.createWriteStream(filePath);
-  stream.write(buffer);
-  stream.end();
+  const readStream = fs.createReadStream(filePath);
+  const writeStream = fs.createWriteStream(filePath);
 
-  stream.on('finish', () => {
+  readStream.pipe(writeStream);
+
+  writeStream.on('finish', () => {
     console.log('File saved successfully!');
     res.send('File uploaded successfully!');
   });
 
-  stream.on('error', (err) => {
+  writeStream.on('error', (err) => {
     console.error('Error writing file:', err);
     res.status(500).send('Error uploading file');
   });
@@ -42,4 +50,3 @@ app.post('/upload', upload.single('file'), (req, res) => {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
-
